@@ -114,7 +114,7 @@
   },
   "dependencies": {
     "create-hash": "^1.2.0",
-    "gun": "^0.2019.930",
+    "gun": "GoodDollar/gun#rnsupport",
     "identicon.js": "^2.3.3",
     "text-encoding": "^0.7.0"
   },
