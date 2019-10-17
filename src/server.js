@@ -21,7 +21,7 @@
 import {exists, mkdir, readFile} from 'fs';
 import {promisify} from 'util';
 
-import Gun from 'gun';
+import {Gun} from 'gun';
 //require('gun/sea');
 
 // Iris import depends on whether we're in dev mode or not

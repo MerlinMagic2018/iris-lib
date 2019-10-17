@@ -1,7 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import util from './util';
-import Gun from 'gun';
+import {Gun, SEA} from 'gun';
 
 let myKey;
 
@@ -76,7 +76,7 @@ class Key {
   /**
   * Get a keypair from a JSON string.
   * @param {String} str key JSON
-  * @returns {Object} Gun.SEA keypair object
+  * @returns {Object} SEA keypair object
   */
   static fromString(str) {
     return JSON.parse(str);
@@ -84,10 +84,10 @@ class Key {
 
   /**
   * Generate a new keypair
-  * @returns {Promise<Object>} Gun.SEA keypair object
+  * @returns {Promise<Object>} SEA keypair object
   */
   static generate() {
-    return Gun.SEA.pair();
+    return SEA.pair();
   }
 
   /**
@@ -97,7 +97,7 @@ class Key {
   * @returns {Promise<String>} signed message string
   */
   static async sign(msg, pair) {
-    const sig = await Gun.SEA.sign(msg, pair);
+    const sig = await SEA.sign(msg, pair);
     return `a${sig}`;
   }
 
@@ -108,7 +108,7 @@ class Key {
   * @returns {Promise<String>} signature string
   */
   static verify(msg, pubKey) {
-    return Gun.SEA.verify(msg.slice(1), pubKey);
+    return SEA.verify(msg.slice(1), pubKey);
   }
 }
 

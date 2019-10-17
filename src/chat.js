@@ -1,4 +1,4 @@
-import Gun from 'gun';
+import {Gun, SEA} from 'gun';
 
 /**
 * Private communication channel between two or more participants. Can be used
@@ -35,13 +35,13 @@ class Chat {
   async getSecret(pub) {
     if (!this.secrets[pub]) {
       const epub = await this.gun.user(pub).get(`epub`).once().then();
-      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
+      this.secrets[pub] = await SEA.secret(epub, this.key);
     }
     return this.secrets[pub];
   }
 
   async messageReceived(data, pub, selfAuthored) {
-    const decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+    const decrypted = await SEA.decrypt(data, (await this.getSecret(pub)));
     if (typeof decrypted !== `object`) {
       // console.log(`chat data received`, decrypted);
       return;
@@ -61,7 +61,7 @@ class Chat {
     const keys = Object.keys(this.secrets);
     time = time || new Date().toISOString();
     for (let i = 0;i < keys.length;i ++) {
-      const encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
+      const encrypted = await SEA.encrypt(time, (await this.getSecret(keys[i])));
       this.user.get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).put(encrypted);
     }
   }
@@ -73,7 +73,7 @@ class Chat {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
       this.gun.user().get(`chat`).get(keys[i]).get(`msgsLastSeenTime`).on(async data => {
-        this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        this.myMsgsLastSeenTime = await SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (callback) {
           callback(this.myMsgsLastSeenTime);
         }
@@ -88,7 +88,7 @@ class Chat {
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
       this.gun.user(keys[i]).get(`chat`).get(this.key.pub).get(`msgsLastSeenTime`).on(async data => {
-        this.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await this.getSecret(keys[i])));
+        this.theirMsgsLastSeenTime = await SEA.decrypt(data, (await this.getSecret(keys[i])));
         if (callback) {
           callback(this.theirMsgsLastSeenTime, keys[i]);
         }
@@ -125,7 +125,7 @@ class Chat {
     //this.gun.user().get('message').set(temp);
     const keys = Object.keys(this.secrets);
     for (let i = 0;i < keys.length;i ++) {
-      const encrypted = await Gun.SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
+      const encrypted = await SEA.encrypt(JSON.stringify(msg), (await this.getSecret(keys[i])));
       this.user.get(`chat`).get(keys[i]).get(`${msg.time}`).put(encrypted);
     }
   }

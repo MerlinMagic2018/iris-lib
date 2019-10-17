@@ -4,7 +4,7 @@ import Identity from './identity';
 import Attribute from './attribute';
 import Chat from './chat';
 import util from './util';
-import Gun from 'gun'; // eslint-disable-line no-unused-vars
+import {Gun} from 'gun'; // eslint-disable-line no-unused-vars
 import then from 'gun/lib/then'; // eslint-disable-line no-unused-vars
 import load from 'gun/lib/load'; // eslint-disable-line no-unused-vars
 

@@ -2,9 +2,7 @@
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('gun')) :
 	typeof define === 'function' && define.amd ? define(['gun'], factory) :
 	(global.irisLib = factory(global.Gun));
-}(this, (function (Gun) { 'use strict';
-
-	Gun = Gun && Gun.hasOwnProperty('default') ? Gun['default'] : Gun;
+}(this, (function (gun) { 'use strict';
 
 	function unwrapExports (x) {
 		return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
@@ -9838,7 +9836,7 @@
 	  /**
 	  * Get a keypair from a JSON string.
 	  * @param {String} str key JSON
-	  * @returns {Object} Gun.SEA keypair object
+	  * @returns {Object} SEA keypair object
 	  */
 
 
@@ -9848,12 +9846,12 @@
 
 	  /**
 	  * Generate a new keypair
-	  * @returns {Promise<Object>} Gun.SEA keypair object
+	  * @returns {Promise<Object>} SEA keypair object
 	  */
 
 
 	  Key.generate = function generate() {
-	    return Gun.SEA.pair();
+	    return gun.SEA.pair();
 	  };
 
 	  /**
@@ -9865,7 +9863,7 @@
 
 
 	  Key.sign = async function sign(msg, pair) {
-	    var sig = await Gun.SEA.sign(msg, pair);
+	    var sig = await gun.SEA.sign(msg, pair);
 	    return 'a' + sig;
 	  };
 
@@ -9878,7 +9876,7 @@
 
 
 	  Key.verify = function verify(msg, pubKey) {
-	    return Gun.SEA.verify(msg.slice(1), pubKey);
+	    return gun.SEA.verify(msg.slice(1), pubKey);
 	  };
 
 	  return Key;
@@ -10509,15 +10507,15 @@
 	  /**
 	  * @param {Object} gun node where the Identity data lives
 	  */
-	  function Identity(gun, linkTo, index) {
+	  function Identity(gun$$1, linkTo, index) {
 	    _classCallCheck(this, Identity);
 
-	    this.gun = gun;
+	    this.gun = gun$$1;
 	    this.linkTo = linkTo;
 	    this.index = index;
 	  }
 
-	  Identity.create = function create(gun, data, index) {
+	  Identity.create = function create(gun$$1, data, index) {
 	    if (!data.linkTo && !data.attrs) {
 	      throw new Error('You must specify either data.linkTo or data.attrs');
 	    }
@@ -10530,8 +10528,8 @@
 	    } else {
 	      data.linkTo = Identity.getLinkTo(data.attrs);
 	    }
-	    gun.put(data);
-	    return new Identity(gun, data.linkTo, index);
+	    gun$$1.put(data);
+	    return new Identity(gun$$1, data.linkTo, index);
 	  };
 
 	  Identity.getLinkTo = function getLinkTo(attrs) {
@@ -10992,13 +10990,13 @@
 	  Chat.prototype.getSecret = async function getSecret(pub) {
 	    if (!this.secrets[pub]) {
 	      var epub = await this.gun.user(pub).get('epub').once().then();
-	      this.secrets[pub] = await Gun.SEA.secret(epub, this.key);
+	      this.secrets[pub] = await gun.SEA.secret(epub, this.key);
 	    }
 	    return this.secrets[pub];
 	  };
 
 	  Chat.prototype.messageReceived = async function messageReceived(data, pub, selfAuthored) {
-	    var decrypted = await Gun.SEA.decrypt(data, (await this.getSecret(pub)));
+	    var decrypted = await gun.SEA.decrypt(data, (await this.getSecret(pub)));
 	    if (typeof decrypted !== 'object') {
 	      // console.log(`chat data received`, decrypted);
 	      return;
@@ -11018,7 +11016,7 @@
 	    var keys = _Object$keys(this.secrets);
 	    time = time || new Date().toISOString();
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
+	      var encrypted = await gun.SEA.encrypt(time, (await this.getSecret(keys[i])));
 	      this.user.get('chat').get(keys[i]).get('msgsLastSeenTime').put(encrypted);
 	    }
 	  };
@@ -11035,7 +11033,7 @@
 
 	    var _loop = function _loop(i) {
 	      _this.gun.user().get('chat').get(keys[i]).get('msgsLastSeenTime').on(async function (data) {
-	        _this.myMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
+	        _this.myMsgsLastSeenTime = await gun.SEA.decrypt(data, (await _this.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this.myMsgsLastSeenTime);
 	        }
@@ -11059,7 +11057,7 @@
 
 	    var _loop2 = function _loop2(i) {
 	      _this2.gun.user(keys[i]).get('chat').get(_this2.key.pub).get('msgsLastSeenTime').on(async function (data) {
-	        _this2.theirMsgsLastSeenTime = await Gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
+	        _this2.theirMsgsLastSeenTime = await gun.SEA.decrypt(data, (await _this2.getSecret(keys[i])));
 	        if (callback) {
 	          callback(_this2.theirMsgsLastSeenTime, keys[i]);
 	        }
@@ -11110,7 +11108,7 @@
 	    //this.gun.user().get('message').set(temp);
 	    var keys = _Object$keys(this.secrets);
 	    for (var i = 0; i < keys.length; i++) {
-	      var encrypted = await Gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
+	      var encrypted = await gun.SEA.encrypt(_JSON$stringify(msg), (await this.getSecret(keys[i])));
 	      this.user.get('chat').get(keys[i]).get('' + msg.time).put(encrypted);
 	    }
 	  };
@@ -11122,15 +11120,15 @@
 	  */
 
 
-	  Chat.setOnline = function setOnline(gun, isOnline) {
+	  Chat.setOnline = function setOnline(gun$$1, isOnline) {
 	    if (isOnline) {
 	      var update = function update() {
-	        gun.user().get('lastActive').put(Math.round(Gun.state() / 1000));
+	        gun$$1.user().get('lastActive').put(Math.round(gun.Gun.state() / 1000));
 	      };
 	      update();
-	      gun.setOnlineInterval = setInterval(update, 3000);
+	      gun$$1.setOnlineInterval = setInterval(update, 3000);
 	    } else {
-	      clearInterval(gun.setOnlineInterval);
+	      clearInterval(gun$$1.setOnlineInterval);
 	    }
 	  };
 
@@ -11143,11 +11141,11 @@
 	  */
 
 
-	  Chat.getOnline = function getOnline(gun, pubKey, callback) {
+	  Chat.getOnline = function getOnline(gun$$1, pubKey, callback) {
 	    var timeout = void 0;
-	    gun.user(pubKey).get('lastActive').on(function (lastActive) {
+	    gun$$1.user(pubKey).get('lastActive').on(function (lastActive) {
 	      clearTimeout(timeout);
-	      var now = Math.round(Gun.state() / 1000);
+	      var now = Math.round(gun.Gun.state() / 1000);
 	      var isOnline = lastActive > now - 10 && lastActive < now + 30;
 	      callback({ isOnline: isOnline, lastActive: lastActive });
 	      if (isOnline) {
@@ -11275,8 +11273,8 @@
 
 	    if (options.pubKey) {
 	      // someone else's index
-	      var gun = options.gun || new Gun();
-	      var user = gun.user(options.pubKey);
+	      var gun$$1 = options.gun || new gun.Gun();
+	      var user = gun$$1.user(options.pubKey);
 	      this.gun = user.get('iris');
 	      this.viewpoint = new Attribute({ type: 'keyID', value: options.pubKey });
 	      this.ready = _Promise.resolve();
@@ -11296,8 +11294,8 @@
 	    if (!keypair) {
 	      keypair = await Key.getDefault();
 	    }
-	    var gun = this.options.gun || new Gun();
-	    var user = gun.user();
+	    var gun$$1 = this.options.gun || new gun.Gun();
+	    var user = gun$$1.user();
 	    user.auth(keypair);
 	    this.writable = true;
 	    this.viewpoint = new Attribute('keyID', Key.getId(keypair));
@@ -11673,7 +11671,7 @@
 	      console.error(e.stack);
 	      throw e;
 	    }
-	    var hash = Gun.node.soul(id) || id._ && id._.link || 'todo';
+	    var hash = gun.Gun.node.soul(id) || id._ && id._.link || 'todo';
 	    var indexKeys = await this.getIdentityIndexKeys(id, hash.substr(0, 6));
 
 	    var indexes = _Object$keys(indexKeys);
@@ -12325,7 +12323,7 @@
 	      if (!searchTermCheck(key)) {
 	        return;
 	      }
-	      var soul = Gun.node.soul(id);
+	      var soul = gun.Gun.node.soul(id);
 	      if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	        seen[soul] = true;
 	        var identity = new Identity(node.get(key), undefined, _this10);
@@ -12344,7 +12342,7 @@
 	            if (!searchTermCheck(key)) {
 	              return;
 	            }
-	            var soul = Gun.node.soul(id);
+	            var soul = gun.Gun.node.soul(id);
 	            if (soul && !Object.prototype.hasOwnProperty.call(seen, soul)) {
 	              seen[soul] = true;
 	              callback(new Identity(_this10.gun.user(key).get('iris').get('identitiesBySearchKey').get(k), undefined, _this10));
