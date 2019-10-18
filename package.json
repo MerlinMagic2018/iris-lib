@@ -118,7 +118,6 @@
     "text-encoding": "^0.7.0"
   },
   "react-native": {
-    "fs": false,
-    "create-hash": false
+    "fs": false
   }
 }
