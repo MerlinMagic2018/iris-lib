@@ -125,7 +125,7 @@ class Attribute {
   * @param {object} options {width}
   * @returns {HTMLElement} identicon div element
   */
-  identicon(options = {width:50}) {
+  identicon(options = {width: 50}) {
     util.injectCss(); // some other way that is not called on each identicon generation?
 
     const div = document.createElement(`div`);
@@ -137,9 +137,11 @@ class Attribute {
     img.alt = ``;
     img.width = options.width;
     img.height = options.width;
-    const hash = util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`);
-    const identicon = new Identicon(hash, {width: options.width, format: `svg`});
-    img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
+    util.getHash(`${encodeURIComponent(this.type)}:${encodeURIComponent(this.value)}`, `hex`)
+      .then(hash => {
+        const identicon = new Identicon(hash, {width: options.width, format: `svg`});
+        img.src = `data:image/svg+xml;base64,${identicon.toString()}`;
+      });
 
     const name = document.createElement(`span`);
     name.className = `iris-distance`;

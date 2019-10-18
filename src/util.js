@@ -1,6 +1,5 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
-
-import createHash from 'create-hash';
+import {SEA} from 'gun';
 
 let isNode = false;
 try {
@@ -8,13 +7,11 @@ try {
 } catch (e) { null; }
 
 export default {
-  getHash: function(str, format = `base64`) {
+  getHash(str, format = `base64`) {
     if (!str) {
       return undefined;
     }
-    const hash = createHash(`sha256`);
-    hash.update(str);
-    return hash.digest(format);
+    return SEA.work(str, undefined, undefined, {name: `SHA-256`});
   },
 
   timeoutPromise(promise, timeout) {

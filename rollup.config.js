@@ -16,13 +16,7 @@ const plugins = [
   hypothetical({
     allowFallthrough: true,
     files: {
-      'node-webcrypto-ossl/': `
-        export default {};
-      `,
       'text-encoding/': `
-        export default {};
-      `,
-      '@trust/webcrypto/': `
         export default {};
       `
     }

@@ -217,8 +217,9 @@ class Index {
     }
   }
 
-  static getMsgIndexKey(msg) {
+  static async getMsgIndexKey(msg) {
     let distance = parseInt(msg.distance);
+    await msg.getHash();
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const key = `${distance}:${Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp))}:${(msg.ipfs_hash || msg.hash).substr(0, 9)}`;
@@ -226,13 +227,14 @@ class Index {
   }
 
   // TODO: GUN indexing module that does this automatically
-  static getMsgIndexKeys(msg) {
+  static async getMsgIndexKeys(msg) {
     const keys = {};
     let distance = parseInt(msg.distance);
     distance = Number.isNaN(distance) ? 99 : distance;
     distance = (`00${distance}`).substring(distance.toString().length); // pad with zeros
     const timestamp = Math.floor(Date.parse(msg.signedData.time || msg.signedData.timestamp));
-    const hashSlice = msg.getHash().substr(0, 9);
+    const hash = await msg.getHash();
+    const hashSlice = hash.substr(0, 9);
 
     if (msg.signedData.type === `chat`) {
       if (msg.signedData.recipient.uuid) {
@@ -242,7 +244,7 @@ class Index {
       return keys;
     }
 
-    keys.messagesByHash = [msg.getHash()];
+    keys.messagesByHash = [hash];
     keys.messagesByTimestamp = [`${timestamp}:${hashSlice}`];
     keys.messagesByDistance = [`${distance}:${keys.messagesByTimestamp[0]}`];
     keys.messagesByType = [`${msg.signedData.type}:${timestamp}:${hashSlice}`];
@@ -412,10 +414,11 @@ class Index {
             if (!Object.prototype.hasOwnProperty.call(o.attributes), a2.uri()) {
               // TODO remove attribute from identity if not enough verifications / too many unverifications
               o.attributes[a2.uri()] = a2;
-              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(val => {
+              this.gun.get(`messagesByRecipient`).get(a2.uri()).map().once(async val => {
                 const m2 = Message.fromSig(val);
-                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2.getHash())) {
-                  o.received[m2.getHash()] = m2;
+                const m2hash = await m2.getHash();
+                if (!Object.prototype.hasOwnProperty.call(o.received.hasOwnProperty, m2hash)) {
+                  o.received[m2hash] = m2;
                   if (m2.isPositive()) {
                     o.receivedPositive ++;
                     m2.getAuthor(this).gun.get(`trustDistance`).on(d => {
@@ -434,10 +437,11 @@ class Index {
                   node.put(o);
                 }
               });
-              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(val => {
+              this.gun.get(`messagesByAuthor`).get(a2.uri()).map().once(async val => {
                 const m2 = Message.fromSig(val);
-                if (!Object.prototype.hasOwnProperty.call(o.sent, m2.getHash())) {
-                  o.sent[m2.getHash()] = m2;
+                const m2hash = await m2.getHash();
+                if (!Object.prototype.hasOwnProperty.call(o.sent, m2hash)) {
+                  o.sent[m2hash] = m2;
                   if (m2.isPositive()) {
                     o.sentPositive ++;
                   } else if (m2.isNegative()) {
@@ -695,7 +699,7 @@ class Index {
 
   async _updateIdentityProfilesByMsg(msg, authorIdentities, recipientIdentities) {
     let start;
-    let msgIndexKey = Index.getMsgIndexKey(msg);
+    let msgIndexKey = await Index.getMsgIndexKey(msg);
     msgIndexKey = msgIndexKey.substr(msgIndexKey.indexOf(`:`) + 1);
     const ids = Object.values(Object.assign({}, authorIdentities, recipientIdentities));
     for (let i = 0;i < ids.length;i ++) { // add new identifiers to identity
@@ -844,7 +848,8 @@ class Index {
       for (let i = 0;i < msgs.length;i ++) {
         for (const a of msgs[i].getAuthorArray()) {
           if (a.isUniqueType()) {
-            const key = `${a.uri()}:${msgs[i].getHash()}`;
+            const hash = await msgs[i].getHash();
+            const key = `${a.uri()}:${hash}`;
             msgsByAuthor[key] = msgs[i];
           }
         }
@@ -916,7 +921,7 @@ class Index {
     if (msg.constructor.name !== `Message`) {
       throw new Error(`addMessage failed: param must be a Message, received ${msg.constructor.name}`);
     }
-    const hash = msg.getHash();
+    const hash = await msg.getHash();
     if (true === options.checkIfExists) {
       const exists = await this.gun.get(`messagesByHash`).get(hash).then();
       if (exists) {
@@ -943,7 +948,7 @@ class Index {
       this.gun.back(- 1).get(`messagesByHash`).get(msg.signedData.sharedMsg).get(`shares`).get(hash).put(node);
     }
     start = new Date();
-    const indexKeys = Index.getMsgIndexKeys(msg);
+    const indexKeys = await Index.getMsgIndexKeys(msg);
     this.debug((new Date()) - start, `ms getMsgIndexKeys`);
     for (const index in indexKeys) {
       if (Array.isArray(indexKeys[index])) {
@@ -1036,7 +1041,7 @@ class Index {
   */
   getMessageByHash(hash) {
     const isIpfsUri = hash.indexOf(`Qm`) === 0;
-    return new Promise(async resolve => {
+    return new Promise(resolve => {
       const resolveIfHashMatches = async (d, fromIpfs) => {
         const obj = typeof d === `object` ? d : JSON.parse(d);
         const m = await Message.fromSig(obj);
@@ -1048,7 +1053,7 @@ class Index {
           h = await m.saveToIpfs(this.options.ipfs);
           republished = true;
         } else {
-          h = m.getHash();
+          h = await m.getHash();
         }
         if (h === hash || (isIpfsUri && !this.options.ipfs)) { // does not check hash validity if it's an ipfs uri and we don't have ipfs
           if (!fromIpfs && this.options.ipfs && this.writable && !republished) {
@@ -1092,9 +1097,10 @@ class Index {
   */
   getMessagesByTimestamp(callback, limit, cursor, desc = true, filter) {
     const seen = {};
-    const cb = msg => {
+    const cb = async msg => {
       if ((!limit || Object.keys(seen).length < limit) && !Object.prototype.hasOwnProperty.call(seen, msg.hash)) {
-        seen[msg.getHash()] = true;
+        const hash = await msg.getHash();
+        seen[hash] = true;
         callback(msg);
       }
     };
@@ -1136,11 +1142,12 @@ class Index {
     }
   }
 
-  setReaction(msg: Object, reaction) {
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`reactions`).get(msg.getHash()).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
-    this.gun.get(`messagesByHash`).get(msg.getHash()).get(`reactions`).get(this.viewpoint.value).put(reaction);
+  async setReaction(msg: Object, reaction) {
+    const hash = await msg.getHash();
+    this.gun.get(`reactions`).get(hash).put(reaction);
+    this.gun.get(`reactions`).get(hash).put(reaction);
+    this.gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.viewpoint.value).put(reaction);
+    this.gun.get(`messagesByHash`).get(hash).get(`reactions`).get(this.viewpoint.value).put(reaction);
   }
 }
 

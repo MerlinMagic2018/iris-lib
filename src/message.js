@@ -148,7 +148,6 @@ class Message {
   */
   getSignerKeyID() {
     return this.pubKey; // hack until gun supports keyID lookups
-    //return util.getHash(this.pubKey);
   }
 
   _validate() {
@@ -250,7 +249,7 @@ class Message {
   async sign(key: Object) {
     this.sig = await Key.sign(this.signedData, key);
     this.pubKey = key.pub;
-    this.getHash();
+    await this.getHash();
     return true;
   }
 
@@ -323,9 +322,9 @@ class Message {
   /**
   * @returns {string} base64 hash of message
   */
-  getHash() {
+  async getHash() {
     if (this.sig && !this.hash) {
-      this.hash = util.getHash(this.sig);
+      this.hash = await util.getHash(this.sig);
     }
     return this.hash;
   }
@@ -351,11 +350,11 @@ class Message {
       throw new ValidationError(`${errorMsg} Invalid signature`);
     }
     if (this.hash) {
-      if (this.hash !== util.getHash(this.sig)) {
+      if (this.hash !== (await util.getHash(this.sig))) {
         throw new ValidationError(`${errorMsg} Invalid message hash`);
       }
     } else {
-      this.getHash();
+      await this.getHash();
     }
     return true;
   }

@@ -70,7 +70,6 @@ class Key {
       throw new Error(`missing param`);
     }
     return key.pub; // hack until GUN supports lookups by keyID
-    //return util.getHash(key.pub);
   }
 
   /**
