@@ -815,7 +815,6 @@ class Index {
       const trustDistance = msg.isPositive() && typeof msg.distance === `number` ? msg.distance + 1 : false;
       const start = new Date();
       const node = this.gun.get(`identitiesBySearchKey`).get(u.uri());
-      node.put({});
       const id = Identity.create(node, {attrs, linkTo, trustDistance}, this);
       this.debug((new Date) - start, `ms identity.create`);
       // {a:1} because inserting {} causes a "no signature on data" error from gun

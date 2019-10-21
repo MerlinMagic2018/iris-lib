@@ -7789,7 +7789,6 @@
 	      var trustDistance = msg.isPositive() && typeof msg.distance === 'number' ? msg.distance + 1 : false;
 	      var _start = new Date();
 	      var node = this.gun.get('identitiesBySearchKey').get(u.uri());
-	      node.put({});
 	      var id = Identity.create(node, { attrs: attrs, linkTo: linkTo, trustDistance: trustDistance }, this);
 	      this.debug(new Date() - _start, 'ms identity.create');
 	      // {a:1} because inserting {} causes a "no signature on data" error from gun
