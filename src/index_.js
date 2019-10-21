@@ -1000,7 +1000,9 @@ class Index {
       return true;
     }
     const node = this.gun.get(`identitiesBySearchKey`);
-    node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
+    // disabled - broken in current gun v
+    // node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
+    node.once().map().on((id, key) => {
       if (Object.keys(seen).length >= limit) {
         // TODO: turn off .map cb
         return;

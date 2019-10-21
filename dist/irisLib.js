@@ -7989,7 +7989,6 @@
 	    var _this10 = this;
 
 	    var limit = arguments[3];
-	    var cursor = arguments[4];
 	    // TODO: param 'exact', type param
 	    var seen = {};
 	    function searchTermCheck(key) {
@@ -8008,7 +8007,9 @@
 	      return true;
 	    }
 	    var node = this.gun.get('identitiesBySearchKey');
-	    node.get({ '.': { '*': value, '>': cursor }, '%': 2000 }).once().map().on(function (id, key) {
+	    // disabled - broken in current gun v
+	    // node.get({'.': {'*': value, '>': cursor}, '%': 2000}).once().map().on((id, key) => {
+	    node.once().map().on(function (id, key) {
 	      if (_Object$keys(seen).length >= limit) {
 	        // TODO: turn off .map cb
 	        return;
