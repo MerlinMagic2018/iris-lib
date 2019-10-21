@@ -48,6 +48,20 @@ class Identity {
     return linkTo;
   }
 
+  getName(callback) {
+    this.gun.get(`attrs`).open(attrs => {
+      const mva = Identity.getMostVerifiedAttributes(attrs);
+      if (mva.name || mva.nickname) {
+        callback((mva.name || mva.nickname).attribute.value);
+      } else {
+        const a = Object.values(attrs)[0];
+        if (a.type === `keyID` || a.type === `uuid`) {
+          callback(`${a.value.slice(0, 6)  }...`);
+        }
+      }
+    });
+  }
+
   static getMostVerifiedAttributes(attrs) {
     const mostVerifiedAttributes = {};
     Object.keys(attrs).forEach(k => {

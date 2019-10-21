@@ -5964,6 +5964,43 @@
 
 	var _Object$assign = unwrapExports(assign$1);
 
+	var isEnum$1 = _objectPie.f;
+	var _objectToArray = function (isEntries) {
+	  return function (it) {
+	    var O = _toIobject(it);
+	    var keys = _objectKeys(O);
+	    var length = keys.length;
+	    var i = 0;
+	    var result = [];
+	    var key;
+	    while (length > i) {
+	      key = keys[i++];
+	      if (!_descriptors || isEnum$1.call(O, key)) {
+	        result.push(isEntries ? [key, O[key]] : O[key]);
+	      }
+	    }
+	    return result;
+	  };
+	};
+
+	// https://github.com/tc39/proposal-object-values-entries
+
+	var $values = _objectToArray(false);
+
+	_export(_export.S, 'Object', {
+	  values: function values(it) {
+	    return $values(it);
+	  }
+	});
+
+	var values = _core.Object.values;
+
+	var values$1 = createCommonjsModule(function (module) {
+	module.exports = { "default": values, __esModule: true };
+	});
+
+	var _Object$values = unwrapExports(values$1);
+
 	/**
 	* An Iris identity profile. Usually you don't create them yourself, but get them
 	* from Index methods such as get() and search().
@@ -6011,6 +6048,20 @@
 	      }
 	    }
 	    return linkTo;
+	  };
+
+	  Identity.prototype.getName = function getName(callback) {
+	    this.gun.get('attrs').open(function (attrs) {
+	      var mva = Identity.getMostVerifiedAttributes(attrs);
+	      if (mva.name || mva.nickname) {
+	        callback((mva.name || mva.nickname).attribute.value);
+	      } else {
+	        var a = _Object$values(attrs)[0];
+	        if (a.type === 'keyID' || a.type === 'uuid') {
+	          callback(a.value.slice(0, 6) + '...');
+	        }
+	      }
+	    });
 	  };
 
 	  Identity.getMostVerifiedAttributes = function getMostVerifiedAttributes(attrs) {
@@ -6533,43 +6584,6 @@
 	  config: config,
 	  uptime: uptime
 	};
-
-	var isEnum$1 = _objectPie.f;
-	var _objectToArray = function (isEntries) {
-	  return function (it) {
-	    var O = _toIobject(it);
-	    var keys = _objectKeys(O);
-	    var length = keys.length;
-	    var i = 0;
-	    var result = [];
-	    var key;
-	    while (length > i) {
-	      key = keys[i++];
-	      if (!_descriptors || isEnum$1.call(O, key)) {
-	        result.push(isEntries ? [key, O[key]] : O[key]);
-	      }
-	    }
-	    return result;
-	  };
-	};
-
-	// https://github.com/tc39/proposal-object-values-entries
-
-	var $values = _objectToArray(false);
-
-	_export(_export.S, 'Object', {
-	  values: function values(it) {
-	    return $values(it);
-	  }
-	});
-
-	var values = _core.Object.values;
-
-	var values$1 = createCommonjsModule(function (module) {
-	module.exports = { "default": values, __esModule: true };
-	});
-
-	var _Object$values = unwrapExports(values$1);
 
 	// 20.1.2.4 Number.isNaN(number)
 

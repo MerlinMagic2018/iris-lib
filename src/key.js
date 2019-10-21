@@ -1,7 +1,7 @@
 /*eslint no-useless-escape: "off", camelcase: "off" */
 
 import util from './util';
-import {Gun, SEA} from 'gun';
+import {SEA} from 'gun';
 
 let myKey;
 
